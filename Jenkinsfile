@@ -2,6 +2,18 @@ pipeline {
     agent any
 
     stages {
+
+        stage('SonarQube Analysis') {
+            steps{
+                script{
+                    def mvn = tool 'Default Maven';
+                    withSonarQubeEnv('SonarScanner') {
+                    sh "${mvn}/bin/mvn clean verify sonar:sonar -Dsonar.projectKey=Jenkins -Dmaven.test.skip=true "
+                    }
+                }
+            }
+        }
+
         stage('Build') {
             steps {
                 sh "git submodule update --init --recursive"
