@@ -6,9 +6,8 @@ pipeline {
         stage('SonarQube Analysis') {
             steps{
                 script{
-                    def mvn = tool 'Default Maven';
                     withSonarQubeEnv('sonarqube') {
-                    sh "${mvn}/bin/mvn clean verify sonar:sonar -Dsonar.projectKey=Jenkins -Dmaven.test.skip=true "
+                    sh "mvn clean verify sonar:sonar -Dsonar.projectKey=Jenkins -Dmaven.test.skip=true "
                     }
                 }
             }
