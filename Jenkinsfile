@@ -3,12 +3,18 @@ pipeline {
 
     stages {
 
-        stage('SonarQube Analysis') {
+        stage('Scan Sonarqube'){
             steps{
-                script{
-                    withSonarQubeEnv('sonarqube') {
-                    sh "mvn clean verify sonar:sonar -Dsonar.projectKey=Jenkins -Dmaven.test.skip=true "
-                    }
+                withSonarQubeEnv(installationName: 'SQ-dw'){
+                    sh "mvn clean package sonar:sonar -DskipTests"
+                }
+            }
+        }
+
+        stage('Quality Gate'){
+            steps{
+                timeout(time: 2, unit: 'MINUTES'){
+                    waitForQualityGate abortPipeline: true
                 }
             }
         }
@@ -34,6 +40,8 @@ pipeline {
                 script {
                     sh "docker tag aline-underwriter-tk:latest 032797834308.dkr.ecr.us-east-1.amazonaws.com/aline-underwriter-tk:latest"
                     sh "docker push 032797834308.dkr.ecr.us-east-1.amazonaws.com/aline-underwriter-tk:latest"
+                    sh "docker system prune -af"
+                    sh "docker volume prune -f"
                 }
             }
         }
