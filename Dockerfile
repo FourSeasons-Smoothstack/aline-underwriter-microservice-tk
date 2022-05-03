@@ -8,7 +8,6 @@ EXPOSE 8071
 
 ENV APP_PORT=8071
 
-COPY . /app
-WORKDIR /app
+COPY ./underwriter-microservice/target/underwriter-microservice-0.1.0.jar underwriter.jar
 
-ENTRYPOINT ["java", "-jar", "underwriter-microservice-0.1.0.jar"]
+ENTRYPOINT ["java", "-jar", "underwriter.jar"]
