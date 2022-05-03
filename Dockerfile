@@ -11,4 +11,4 @@ ENV APP_PORT=8071
 COPY . /app
 WORKDIR /app
 
-ENTRYPOINT ["java", "-jar", "user-microservice-0.1.0.jar"]
+ENTRYPOINT ["java", "-jar", "underwriter-microservice-0.1.0.jar"]
