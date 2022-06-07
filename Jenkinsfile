@@ -63,6 +63,8 @@ pipeline {
             steps {
                 script {
                     sh "curl -X PUT -u ${ART_USER}:${ART_PASS} -T underwriter-microservice/target/*.jar 'http://ec2-50-18-84-74.us-west-1.compute.amazonaws.com:8081/artifactory/${ART_MAVEN_REPO}/aline-underwriter.jar'"
+                    sh "docker login -u ${ART_USER} -p ${ART_PASS} http://ec2-50-18-84-74.us-west-1.compute.amazonaws.com:8081"
+                    sh "docker push http://ec2-50-18-84-74.us-west-1.compute.amazonaws.com:8082/docker-local/aline-underwriter:latest"
                 }
             }
         }
