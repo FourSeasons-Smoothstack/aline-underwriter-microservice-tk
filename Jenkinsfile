@@ -1,6 +1,12 @@
 pipeline {
     agent any
-
+    environment {
+        AWS_ID = credentials('AWS-ID')
+        ART_USER = credentials('ART_USER')
+        ART_PASS = credentials('ART_PASS')
+        ART_URL = credentials('ART_URL')
+        ART_MAVEN_REPO = credentials('ART_MAVEN_REPO')
+    }
     stages {
 
         stage('Pull Github repo') {
@@ -9,22 +15,22 @@ pipeline {
             }
         }
 
-        stage('Scan Sonarqube'){
-            steps{
-                withSonarQubeEnv(installationName: 'SQ-TK'){
-                    sh "git submodule update --init --recursive"
-                    sh "mvn clean package sonar:sonar -DskipTests"
-                }
-            }
-        }
+        // stage('Scan Sonarqube'){
+        //     steps{
+        //         withSonarQubeEnv(installationName: 'SQ-TK'){
+        //             sh "git submodule update --init --recursive"
+        //             sh "mvn clean package sonar:sonar -DskipTests"
+        //         }
+        //     }
+        // }
 
-        stage('Quality Gate'){
-            steps{
-                timeout(time: 2, unit: 'MINUTES'){
-                    waitForQualityGate abortPipeline: true
-                }
-            }
-        }
+        // stage('Quality Gate'){
+        //     steps{
+        //         timeout(time: 2, unit: 'MINUTES'){
+        //             waitForQualityGate abortPipeline: true
+        //         }
+        //     }
+        // }
 
         stage('Build') {
             steps {
@@ -37,7 +43,7 @@ pipeline {
         stage('Logging into AWS ECR') {
             steps {
                 withAWS(credentials: 'AWS-TK', region: 'us-west-1') {
-                    sh "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 032797834308.dkr.ecr.us-east-1.amazonaws.com"
+                    sh "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${AWS_ID}.dkr.ecr.us-east-1.amazonaws.com"
                 }
             }
         }
@@ -45,10 +51,18 @@ pipeline {
         stage('Deploy to AWS ECR'){
             steps{
                 script {
-                    sh "docker tag aline-underwriter-tk:latest 032797834308.dkr.ecr.us-east-1.amazonaws.com/aline-underwriter-tk:latest"
-                    sh "docker push 032797834308.dkr.ecr.us-east-1.amazonaws.com/aline-underwriter-tk:latest"
+                    sh "docker tag aline-underwriter-tk:latest ${AWS_ID}.dkr.ecr.us-east-1.amazonaws.com/aline-underwriter-tk:latest"
+                    sh "docker push ${AWS_ID}.dkr.ecr.us-east-1.amazonaws.com/aline-underwriter-tk:latest"
                     sh "docker system prune -af"
                     sh "docker volume prune -f"
+                }
+            }
+        }
+
+        stage('Deploy to Artifactory') {
+            steps {
+                script {
+                    sh "curl -X PUT -u ${ART_USER}:${ART_PASS} -T underwriter-microservice/target/*.jar 'http://ec2-50-18-84-74.us-west-1.compute.amazonaws.com:8081/artifactory/${ART_MAVEN_REPO}/aline-underwriter.jar'"
                 }
             }
         }
